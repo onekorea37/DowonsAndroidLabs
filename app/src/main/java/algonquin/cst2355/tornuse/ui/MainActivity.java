@@ -72,5 +72,12 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
         });
 
+        variableBinding.mybutton2.setOnClickListener(click -> {
+            int width = click.getWidth();
+            int height = click.getHeight();
+            String message = "The width = " + width + " and height = " + height;
+            Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+        });
+
     }
 }
