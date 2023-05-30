@@ -3,4 +3,7 @@
     <string name="app_name">Dowon\'s Android Labs</string>
     <string name="hello_message">안녕, 세상</string>
     <string name="button_message">"나는 버튼 "</string>
+    <string name="button1">버튼 1</string>
+    <string name="button2">버튼 2</string>
+    <string name="button3">버튼 3</string>
 </resources>
