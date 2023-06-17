@@ -3,6 +3,7 @@
   <component name="AndroidTestResultsUserPreferences">
     <option name="androidTestResultsTableState">
       <map>
+<<<<<<< HEAD
         <entry key="-1642183727">
           <value>
             <AndroidTestResultsTableState>
@@ -42,6 +43,8 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
+=======
+>>>>>>> origin/Week5
         <entry key="743045059">
           <value>
             <AndroidTestResultsTableState>
@@ -56,6 +59,7 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
+<<<<<<< HEAD
         <entry key="1001656364">
           <value>
             <AndroidTestResultsTableState>
@@ -69,6 +73,8 @@
             </AndroidTestResultsTableState>
           </value>
         </entry>
+=======
+>>>>>>> origin/Week5
       </map>
     </option>
   </component>
