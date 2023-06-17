@@ -19,7 +19,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 
-import com.example.DowonsAndroidLabs.R;
+import com.example.algonquin.cst2355.tornuse.R;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;

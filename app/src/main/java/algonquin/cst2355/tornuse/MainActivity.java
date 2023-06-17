@@ -8,7 +8,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.DowonsAndroidLabs.R;
+import com.example.algonquin.cst2355.tornuse.R;
 
 public class MainActivity extends AppCompatActivity {
 
