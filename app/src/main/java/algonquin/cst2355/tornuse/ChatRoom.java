@@ -1,26 +1,34 @@
 package algonquin.cst2355.tornuse;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.algonquin.cst2355.tornuse.R;
 import com.example.algonquin.cst2355.tornuse.databinding.ActivityChatRoomBinding;
 import com.example.algonquin.cst2355.tornuse.databinding.ReceiveMessageBinding;
 import com.example.algonquin.cst2355.tornuse.databinding.SentMessageBinding;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import algonquin.cst2355.tornuse.data.ChatRoomViewModel;
 
@@ -28,8 +36,10 @@ public class ChatRoom extends AppCompatActivity {
 
     protected ArrayList<ChatMessage> messages;
     ActivityChatRoomBinding binding;
-
+    MessageDatabase myDB;
     RecyclerView.Adapter<MyRowHolder> myAdapter;
+
+    ChatMessageDAO myDAO;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,13 +53,38 @@ public class ChatRoom extends AppCompatActivity {
 
         messages = chatModel.messages;
 
+        myDB = Room.databaseBuilder(getApplicationContext(), MessageDatabase.class, "database-name").build();
+        myDAO = myDB.cmDAO();
+
+        Executor thread = Executors.newSingleThreadExecutor();
+        thread.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<ChatMessage> allMessages = myDAO.getAllMessages();
+
+                messages.addAll(allMessages);
+
+                if(myAdapter != null)
+                    myAdapter.notifyDataSetChanged();
+            }
+        });
+
         binding.submit.setOnClickListener(click -> {
             String typed = binding.message.getText().toString();
 
             SimpleDateFormat sdf = new SimpleDateFormat("EEEE, dd-MMM-yyyy hh-mm-ss a");
             String currentDateandTime = sdf.format(new Date());
 
-            messages.add(new ChatMessage(typed, currentDateandTime, true));
+            ChatMessage newMessage = new ChatMessage(typed, currentDateandTime, true);
+            Executor thread1 = Executors.newSingleThreadExecutor();
+            thread1.execute(new Runnable() {
+                @Override
+                public void run() {
+                    newMessage.id = myDAO.insertMessage(newMessage);
+                }
+            });
+
+            messages.add(newMessage);
 
             myAdapter.notifyItemInserted(messages.size() - 1);
 
@@ -63,7 +98,16 @@ public class ChatRoom extends AppCompatActivity {
             SimpleDateFormat sdf = new SimpleDateFormat("EEEE, dd-MMM-yyyy hh-mm-ss a");
             String currentDateandTime = sdf.format(new Date());
 
-            messages.add(new ChatMessage(typed, currentDateandTime, false));
+            ChatMessage newMessage = new ChatMessage(typed, currentDateandTime, false);
+            Executor thread2 = Executors.newSingleThreadExecutor();
+            thread2.execute(new Runnable() {
+                @Override
+                public void run() {
+                    newMessage.id = myDAO.insertMessage(newMessage);
+                }
+            });
+
+            messages.add(newMessage);
 
             myAdapter.notifyItemInserted(messages.size() - 1);
 
@@ -109,9 +153,10 @@ public class ChatRoom extends AppCompatActivity {
         });
 
         binding.theRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
     }
 
-    public class MyRowHolder extends RecyclerView.ViewHolder {
+    protected class MyRowHolder extends RecyclerView.ViewHolder {
 
         TextView messageText;
         TextView timeText;
@@ -122,6 +167,43 @@ public class ChatRoom extends AppCompatActivity {
             messageText = itemView.findViewById(R.id.theMessage);
             timeText = itemView.findViewById(R.id.theTime);
 
+            itemView.setOnClickListener(click -> {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder( ChatRoom.this );
+                builder.setMessage("Do you really want to delete this?");
+
+                builder.setTitle("Question");
+
+                builder.setPositiveButton("No", (cl, which) -> {
+                    Log.d("DELETE", "The user clicked NO");
+                });
+
+                builder.setNegativeButton("Yes", (cl, which) -> {
+                    Log.d("DELETE", "The user clicked YES");
+                    int whichRowClicked = getAbsoluteAdapterPosition();
+                    ChatMessage cm = messages.get(whichRowClicked);
+
+                    Executor thread = Executors.newSingleThreadExecutor();
+                    thread.execute(() -> {
+                        myDAO.deleteMessage(cm);
+                        messages.remove(whichRowClicked);
+
+                        runOnUiThread(() -> {
+                            myAdapter.notifyDataSetChanged();
+                        });
+
+                        Snackbar.make(messageText, "You deleted message #" + whichRowClicked, Snackbar.LENGTH_LONG)
+                                .setAction("Undo", clk ->{
+
+                                    messages.add(whichRowClicked, cm);
+                                    myAdapter.notifyItemRemoved(whichRowClicked);
+                                })
+                                .show();
+                    });
+                });
+
+                builder.create().show();
+            });
         }
     }
 }
