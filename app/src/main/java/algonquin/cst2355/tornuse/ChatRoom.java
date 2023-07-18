@@ -3,6 +3,8 @@ package algonquin.cst2355.tornuse;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -41,12 +43,14 @@ public class ChatRoom extends AppCompatActivity {
 
     ChatMessageDAO myDAO;
 
+    ChatRoomViewModel chatModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_room);
 
-        ChatRoomViewModel chatModel = new ViewModelProvider(this).get(ChatRoomViewModel.class);
+        chatModel = new ViewModelProvider(this).get(ChatRoomViewModel.class);
 
         binding = ActivityChatRoomBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -55,6 +59,18 @@ public class ChatRoom extends AppCompatActivity {
 
         myDB = Room.databaseBuilder(getApplicationContext(), MessageDatabase.class, "database-name").build();
         myDAO = myDB.cmDAO();
+
+        chatModel.selectedMessage.observe(this, (newMessage) -> {
+
+            MessageDetailsFragment chatFragment = new MessageDetailsFragment(newMessage);
+
+            FragmentManager fMgr = getSupportFragmentManager();
+            FragmentTransaction tx = fMgr.beginTransaction();
+            tx.addToBackStack("Doens't matter which String");
+            tx.add(R.id.fragmentLocation, chatFragment);
+            tx.commit();
+        });
+
 
         Executor thread = Executors.newSingleThreadExecutor();
         thread.execute(new Runnable() {
@@ -169,7 +185,12 @@ public class ChatRoom extends AppCompatActivity {
 
             itemView.setOnClickListener(click -> {
 
-                AlertDialog.Builder builder = new AlertDialog.Builder( ChatRoom.this );
+              int index = getAbsoluteAdapterPosition();
+              chatModel.selectedMessage.postValue(messages.get(index));
+
+      //      model.selectedMessage.postValue(messages.get(index));
+
+             /*   AlertDialog.Builder builder = new AlertDialog.Builder( ChatRoom.this );
                 builder.setMessage("Do you really want to delete this?");
 
                 builder.setTitle("Question");
@@ -202,7 +223,8 @@ public class ChatRoom extends AppCompatActivity {
                     });
                 });
 
-                builder.create().show();
+                builder.create().show(); */
+
             });
         }
     }
