@@ -12,6 +12,8 @@ import androidx.room.Room;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -45,6 +47,9 @@ public class ChatRoom extends AppCompatActivity {
 
     ChatRoomViewModel chatModel;
 
+    private int selectedMessagePosition = -1;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,14 +60,17 @@ public class ChatRoom extends AppCompatActivity {
         binding = ActivityChatRoomBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        setSupportActionBar( binding.myToolbar);
+
+
         messages = chatModel.messages;
 
         myDB = Room.databaseBuilder(getApplicationContext(), MessageDatabase.class, "database-name").build();
         myDAO = myDB.cmDAO();
 
         chatModel.selectedMessage.observe(this, (newMessage) -> {
-
-            MessageDetailsFragment chatFragment = new MessageDetailsFragment(newMessage);
+            MessageDetailsFragment chatFragment = new MessageDetailsFragment(newMessage, myDAO); // Pass myDAO instance here
+            selectedMessagePosition = messages.indexOf(newMessage);
 
             FragmentManager fMgr = getSupportFragmentManager();
             FragmentTransaction tx = fMgr.beginTransaction();
@@ -70,7 +78,6 @@ public class ChatRoom extends AppCompatActivity {
             tx.add(R.id.fragmentLocation, chatFragment);
             tx.commit();
         });
-
 
         Executor thread = Executors.newSingleThreadExecutor();
         thread.execute(new Runnable() {
@@ -172,6 +179,45 @@ public class ChatRoom extends AppCompatActivity {
 
     }
 
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.id_item1:
+                AlertDialog.Builder builder = new AlertDialog.Builder(ChatRoom.this);
+                builder.setMessage("Do you really want to delete this?");
+                builder.setTitle("Question");
+                builder.setPositiveButton("No", (cl, which) -> {
+                    Log.d("DELETE", "The user clicked NO");
+                });
+                builder.setNegativeButton("Yes", (cl, which) -> {
+                    Log.d("DELETE", "The user clicked YES");
+
+                    // Trigger delete action in the MessageDetailsFragment
+                    MessageDetailsFragment fragment = (MessageDetailsFragment) getSupportFragmentManager().findFragmentById(R.id.fragmentLocation);
+                    if (fragment != null) {
+                        fragment.deleteCurrentMessage();
+                    }
+                });
+                builder.create().show();
+                break;
+
+            case R.id.id_item2:
+                Toast.makeText(this, "Version 1, created by Kang Dowon", Toast.LENGTH_LONG).show();
+                break;
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate( R.menu.my_menu, menu);
+        return true;
+    }
+
     protected class MyRowHolder extends RecyclerView.ViewHolder {
 
         TextView messageText;
@@ -188,42 +234,6 @@ public class ChatRoom extends AppCompatActivity {
               int index = getAbsoluteAdapterPosition();
               chatModel.selectedMessage.postValue(messages.get(index));
 
-      //      model.selectedMessage.postValue(messages.get(index));
-
-             /*   AlertDialog.Builder builder = new AlertDialog.Builder( ChatRoom.this );
-                builder.setMessage("Do you really want to delete this?");
-
-                builder.setTitle("Question");
-
-                builder.setPositiveButton("No", (cl, which) -> {
-                    Log.d("DELETE", "The user clicked NO");
-                });
-
-                builder.setNegativeButton("Yes", (cl, which) -> {
-                    Log.d("DELETE", "The user clicked YES");
-                    int whichRowClicked = getAbsoluteAdapterPosition();
-                    ChatMessage cm = messages.get(whichRowClicked);
-
-                    Executor thread = Executors.newSingleThreadExecutor();
-                    thread.execute(() -> {
-                        myDAO.deleteMessage(cm);
-                        messages.remove(whichRowClicked);
-
-                        runOnUiThread(() -> {
-                            myAdapter.notifyDataSetChanged();
-                        });
-
-                        Snackbar.make(messageText, "You deleted message #" + whichRowClicked, Snackbar.LENGTH_LONG)
-                                .setAction("Undo", clk ->{
-
-                                    messages.add(whichRowClicked, cm);
-                                    myAdapter.notifyItemRemoved(whichRowClicked);
-                                })
-                                .show();
-                    });
-                });
-
-                builder.create().show(); */
 
             });
         }
