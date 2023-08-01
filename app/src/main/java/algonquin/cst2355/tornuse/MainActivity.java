@@ -2,105 +2,154 @@ package algonquin.cst2355.tornuse;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.ImageView;
 
-import com.example.DowonsAndroidLabs.R;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.toolbox.ImageRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.example.DowonsAndroidLabs.databinding.ActivityMainBinding;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URLEncoder;
 
 public class MainActivity extends AppCompatActivity {
 
-    /** This is a javadoc comment */
-
-    /*   This is a normal comment */
-
-    /** This holds the "Hello world" text view */
-    private TextView theText;
-
-    /** This holds the "Click me" button */
-    private Button myButton;
-
-    /** This holds the edit text for typing into */
-    private EditText theEditText;
+    RequestQueue queue = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
 
-        theText = findViewById(R.id.textView);
-        myButton = findViewById(R.id.button);
-        theEditText = findViewById(R.id.theEditText);
+        queue = Volley.newRequestQueue(this);
 
-        myButton.setOnClickListener( click -> {
-            String password = theEditText.getText().toString();
+        setContentView(binding.getRoot());
 
-            checkPasswordComplexity(password);
+        binding.button.setOnClickListener(click -> {
+
+            String cityName = binding.theEditText.getText().toString();
+
+            // Server name
+            String url = "https://api.openweathermap.org/data/2.5/weather?q="
+                    + URLEncoder.encode(cityName)
+                    + "&appid=cddf7c1b95f2f229bc5b127ee462c1bf&units=metric";
+
+            JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                    (successfulResponse) -> {
+                        JSONObject main = null;
+                        try {
+                            main = successfulResponse.getJSONObject("main");
+                            double temp = main.getDouble("temp");
+                            double min = main.getDouble("temp_min");
+                            double max = main.getDouble("temp_max");
+                            int humidity = main.getInt("humidity");
+
+                            runOnUiThread( (  )  -> {
+
+                                binding.temp.setText("The current temperature is " + temp + " degrees");
+                                binding.temp.setVisibility(View.VISIBLE);
+
+                                binding.minTemp.setText("The min temperature is " + min);
+                                binding.minTemp.setVisibility(View.VISIBLE);
+
+                                binding.maxTemp.setText("The max temperature is " + max);
+                                binding.maxTemp.setVisibility(View.VISIBLE);
+
+                                binding.humitidy.setText("The humidity is " + humidity);
+                                binding.humitidy.setVisibility(View.VISIBLE);
+
+                            });
+
+
+                            JSONArray weatherArray = successfulResponse.getJSONArray("weather");
+
+                            JSONObject pos0 = weatherArray.getJSONObject(0);
+                            String iconName = pos0.getString("icon");
+
+                            String description = pos0.getString("description");
+
+                            binding.description.setText(description);
+                            binding.description.setVisibility(View.VISIBLE);
+
+                            String pictureURL = "https://openweathermap.org/img/w/" + iconName + ".png";
+
+                            ImageRequest imgReq = new ImageRequest(pictureURL, new Response.Listener<Bitmap>() {
+                                @Override
+                                public void onResponse(Bitmap bitmap) {
+                                    // Save the bitmap to the device's storage
+                                    saveBitmapToStorage(MainActivity.this, bitmap, iconName);
+
+                                    Bitmap savedIcon = loadBitmapFromStorage(MainActivity.this, iconName);
+                                    binding.icon.setImageBitmap(savedIcon);
+                                }
+                            }, 1024, 1024, ImageView.ScaleType.CENTER, Bitmap.Config.ARGB_8888,
+                                    (error) -> {
+                                        int i = 0;
+                                    });
+
+                            queue.add(imgReq);
+
+                        } catch (JSONException e) {
+                            throw new RuntimeException(e);
+                        }
+
+                    },
+                    (vError) -> {
+                        int i = 0;
+                    });
+
+            queue.add(request);
+
         });
 
+
+
     }
 
-    /** This function checks the password string
-     *
-     * @param password  The string to search
-     * @return true if all condition passed, false otherwise
-     */
-    boolean checkPasswordComplexity(String password) {
-        boolean hasUpperCase = false;
-        boolean hasLowerCase = false;
-        boolean hasNumber = false;
-        boolean hasSpecialSymbol = false;
-
-        // Check each character in the password
-        for (char ch : password.toCharArray()) {
-            if (Character.isUpperCase(ch)) {
-                hasUpperCase = true;
-            } else if (Character.isLowerCase(ch)) {
-                hasLowerCase = true;
-            } else if (Character.isDigit(ch)) {
-                hasNumber = true;
-            } else if (isSpecialSymbol(ch)) {
-                hasSpecialSymbol = true;
+    // Function to save the bitmap to the device's storage
+    private void saveBitmapToStorage(Context context, Bitmap bitmap, String fileName) {
+        FileOutputStream outputStream = null;
+        try {
+            outputStream = context.openFileOutput(fileName + ".png", Context.MODE_PRIVATE);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+            outputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-
-        // Display Toast messages for missing requirements
-        if (!hasUpperCase) {
-            showToast("Your password does not have an upper case letter");
-        }
-        if (!hasLowerCase) {
-            showToast("Your password does not have a lower case letter");
-        }
-        if (!hasNumber) {
-            showToast("Your password does not have a number");
-        }
-        if (!hasSpecialSymbol) {
-            showToast("Your password does not have a special symbol");
-        }
-
-        // Return true if all requirements are met, false otherwise
-        return hasUpperCase && hasLowerCase && hasNumber && hasSpecialSymbol;
     }
 
-    /** This function checks the password string
-     *
-     * @param ch check text include special word
-     * @return true if special character is included
-     */
-    boolean isSpecialSymbol(char ch) {
-        // Define the set of special symbols
-        String specialSymbols = "#$%^&*!@?";
-
-        // Check if the character is a special symbol
-        return specialSymbols.indexOf(ch) != -1;
+    // Function to load the bitmap from the device's storage
+    private Bitmap loadBitmapFromStorage(Context context, String fileName) {
+        try {
+            FileInputStream inputStream = context.openFileInput(fileName + ".png");
+            return BitmapFactory.decodeStream(inputStream);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
-
-    void showToast(String message) {
-        Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
-    }
-
-
 
 }

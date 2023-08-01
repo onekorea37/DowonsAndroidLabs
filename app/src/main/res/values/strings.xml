@@ -2,4 +2,5 @@
     <string name="app_name">Dowon\'s Android Labs</string>
     <string name="hello_message">Type your Password</string>
     <string name="button_message">LOGIN</string>
+    <string name="icon_description" />
 </resources>

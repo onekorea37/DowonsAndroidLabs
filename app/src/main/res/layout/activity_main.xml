@@ -11,8 +11,7 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="180dp"
-        android:text="Your password is complex enough"
+        android:text="Type in the name of City: "
         android:textSize="30dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -20,11 +19,9 @@
 
     <EditText
         android:id="@+id/theEditText"
+        android:layout_marginTop="50dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="40dp"
-        app:layout_constraintBottom_toTopOf="@+id/button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
@@ -35,10 +32,63 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="130dp"
         android:layout_marginEnd="130dp"
-        android:layout_marginBottom="200dp"
-        android:text="LOGIN"
+        android:text="GET FORECAST!"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/theEditText"
+        app:layout_constraintVertical_bias="0.052" />
+
+    <TextView
+        android:id="@+id/temp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text=" "
+        app:layout_constraintTop_toBottomOf="@+id/button" />
+
+    <TextView
+        android:id="@+id/maxTemp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text=" "
+        app:layout_constraintTop_toBottomOf="@+id/temp" />
+
+    <TextView
+        android:id="@+id/minTemp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text=" "
+        app:layout_constraintTop_toBottomOf="@+id/maxTemp" />
+
+    <TextView
+        android:id="@+id/humitidy"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text=" "
+        app:layout_constraintTop_toBottomOf="@+id/minTemp" />
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_centerInParent="true"
+        android:contentDescription="@string/icon_description"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button" />
+
+    <TextView
+        android:id="@+id/description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text=" "
+        app:layout_constraintTop_toBottomOf="@+id/icon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
